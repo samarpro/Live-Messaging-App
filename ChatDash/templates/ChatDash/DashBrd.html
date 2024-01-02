@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Name of Web App</title>
+</head>
+
+<body>
+    <h1>Welcome {{user.first_name}}</h1>
+
+    {% for username in usernames %}
+    <button id="user_button" onclick="sendReceiverName('{{username.username}}')">
+        <h3>{{username}}</h3>
+    </button>
+    {% endfor %}
+
+    <textarea id="ChatOblock" cols="80" rows="30"></textarea>
+    <input type="text" id="InpBlock">
+    <button onclick="SendMsg()">Send</button>
+
+
+    <form action="{% url 'ChatDash:Logout' %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Logout</button>
+    </form>
+
+    <script>
+        let WS;
+        const OutBlock = document.getElementById('ChatOblock')
+        const InpBlock = document.getElementById('InpBlock')
+        function SendMsg() {
+            if (WS && WS.readyState === WebSocket.OPEN) {
+                Sendable_dict = {
+                    // For identification of Group
+                    'Message': InpBlock.value,
+                }
+                console.log("Sent")
+                WS.send(JSON.stringify(Sendable_dict))
+            }
+        }
+        function format_data(data, receiverName) {
+            for (const timestamp in data) {
+                if (data.hasOwnProperty(timestamp)) {
+                    const entry = data[timestamp];
+                    if (entry.sender == receiverName) {
+                        console.log("True so ", entry.receiver)
+                        OutBlock.value = OutBlock.value + `${entry.sender}: ${entry.message}\n`;
+                    }
+                    else {
+                        OutBlock.value = OutBlock.value + `${entry.sender}: ${entry.message}\n`;
+                    }
+
+                }
+            }
+        }
+
+        function get_chats(receiverName,render_all) {
+            fetch('get_chats/' + receiverName + "/"+ render_all + "/")
+                .then(response => response.json())
+                .then(data => {
+                    format_data(data, receiverName)})
+                .catch(error => {
+                    window.alert("Error Occured while Sending")
+                });
+
+        }
+        function sendReceiverName(receiverName) {
+            // if connection is already established then closes the connection 
+            if (WS) {
+                WS.close();
+                InpBlock.value = ""
+            }
+            // if not then goes accordingly
+            WS = new WebSocket("ws://127.0.0.1:8000/" + receiverName + "/")
+            WS.onopen = (e) => {
+                get_chats(receiverName,1)
+            }
+            WS.onmessage = (e) => {
+                get_chats(receiverName,0)
+            }
+
+        }
+
+
+        const addrBar_array = String(window.location.href).split("/");
+        var receiverName = addrBar_array[addrBar_array.length - 2]
+        if (receiverName == "DashBoard") console.log("No user Selected")
+        else sendReceiverName(receiverName)
+
+    </script>
+</body>
+
+</html>
