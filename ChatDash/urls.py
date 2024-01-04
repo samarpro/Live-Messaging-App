@@ -8,4 +8,5 @@ urlpatterns = [
     path('DashBoard/get_chats/<str:receiver_name>/<int:render_all>/',views.ChatProvider,name="ChatProvider"),
     path("DashBoard/",views.DashBoardHandler, name="DashBoardHandler"),
     path("Logout/",Default_View.LogoutView.as_view(),name="Logout"),
+    path("demo/",views.Demo),
 ]

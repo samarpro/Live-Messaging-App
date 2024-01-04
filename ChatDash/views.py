@@ -5,10 +5,14 @@ from ChatAuth.models import CustomAbstractUser
 from ChatsBackend.models import ChatsModel 
 from django.db.models import Q
 from ChatsBackend.consumers import ChatHandlerConsumer
+from django.utils.timezone import now
 # Create your views here.
 
 @login_required(login_url='ChatAuth:Login') # if login is not done then redirects to login_url
 def DashBoardHandler(req):
+    curr_user = CustomAbstractUser.objects.get(username=req.user.username)
+    curr_user.last_login = now()
+    curr_user.save()
     #  Getting all the user in Database and excluding the loggged in one
     user_names = CustomAbstractUser.objects.all().exclude(username=req.user.username)
     # Dictionary -> sent to frontend
@@ -23,7 +27,7 @@ def ChatProvider(req,receiver_name,render_all):
 
     curr_user = CustomAbstractUser.objects.get(username=req.user.username)
     if receiver_name == None:
-        receiver_user = CustomAbstractUser.objects.get(username=req.user.username)
+        receiver_user = curr_user
     else:
         receiver_user=CustomAbstractUser.objects.get(username =receiver_name)
 
@@ -50,3 +54,6 @@ def ChatProvider(req,receiver_name,render_all):
 
     # Return a JSON response
     return JsonResponse(dict_sendable)
+
+def Demo(req):
+    return render(req,"ChatDash/demo.html")

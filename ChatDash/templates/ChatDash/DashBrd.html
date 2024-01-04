@@ -1,95 +1,176 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Name of Web App</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Name of Web App</title>
+
+	<!-- Including Bootstrap -->
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+		integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+		crossorigin="anonymous"></script>
+		<script src="https://kit.fontawesome.com/0cddf4db57.js" crossorigin="anonymous"></script>
+	<!-- Including CSS -->
+	<link rel="stylesheet" href=" {% static 'ChatDash/css/DashBrd.css' %} ">
+
 </head>
 
 <body>
-    <h1>Welcome {{user.first_name}}</h1>
-
-    {% for username in usernames %}
-    <button id="user_button" onclick="sendReceiverName('{{username.username}}')">
-        <h3>{{username}}</h3>
-    </button>
-    {% endfor %}
-
-    <textarea id="ChatOblock" cols="80" rows="30"></textarea>
-    <input type="text" id="InpBlock">
-    <button onclick="SendMsg()">Send</button>
-
-
-    <form action="{% url 'ChatDash:Logout' %}" method="post">
-        {% csrf_token %}
-        <button type="submit">Logout</button>
-    </form>
-
-    <script>
-        let WS;
-        const OutBlock = document.getElementById('ChatOblock')
-        const InpBlock = document.getElementById('InpBlock')
-        function SendMsg() {
-            if (WS && WS.readyState === WebSocket.OPEN) {
-                Sendable_dict = {
-                    // For identification of Group
-                    'Message': InpBlock.value,
-                }
-                console.log("Sent")
-                WS.send(JSON.stringify(Sendable_dict))
-            }
-        }
-        function format_data(data, receiverName) {
-            for (const timestamp in data) {
-                if (data.hasOwnProperty(timestamp)) {
-                    const entry = data[timestamp];
-                    if (entry.sender == receiverName) {
-                        console.log("True so ", entry.receiver)
-                        OutBlock.value = OutBlock.value + `${entry.sender}: ${entry.message}\n`;
-                    }
-                    else {
-                        OutBlock.value = OutBlock.value + `${entry.sender}: ${entry.message}\n`;
-                    }
-
-                }
-            }
-        }
-
-        function get_chats(receiverName,render_all) {
-            fetch('get_chats/' + receiverName + "/"+ render_all + "/")
-                .then(response => response.json())
-                .then(data => {
-                    format_data(data, receiverName)})
-                .catch(error => {
-                    window.alert("Error Occured while Sending")
-                });
-
-        }
-        function sendReceiverName(receiverName) {
-            // if connection is already established then closes the connection 
-            if (WS) {
-                WS.close();
-                InpBlock.value = ""
-            }
-            // if not then goes accordingly
-            WS = new WebSocket("ws://127.0.0.1:8000/" + receiverName + "/")
-            WS.onopen = (e) => {
-                get_chats(receiverName,1)
-            }
-            WS.onmessage = (e) => {
-                get_chats(receiverName,0)
-            }
-
-        }
+	<div class="container">
+		<button class="btn btn-hamburger btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample"
+			aria-controls="offcanvasExample">
+			<i class="fa-solid fa-bars-staggered"></i>
+		</button>
+		<div class="chat-window d-flex justify-content-evenly align-items-center">
+			<div class="contact-list offcanvas-start rounded-2 p-2" tabindex="-1" id="offcanvasExample"
+				aria-labelledby="offcanvasExampleLabel">
+				<div class="user-div offcanvas-header">
+					<h1 class="offcanvas-title m-4" id="offcanvasExampleLabel">Greetings, {{user}}</h1>
+					<button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+				</div>
+				<div class="contact-div offcanvas-body">
+					{% for username in usernames %}
+					<ul class="list-group list-group-flush">
+						<a class="list-group-item fs-4 m-2" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample"
+						aria-controls="offcanvasExample" onclick="sendReceiverName('{{username.username}}')">
+							<div class="image-div"></div>
+							{{username}}
+						</a>
+					</ul>
+					{% endfor %}
+				</div>
+			</div>
+			<div class="message-list p-1 rounded-3">
+				<div class="chat-history rounded-1">
+					<div class="info-section p-2">
+						<h2 id="ReceiverName">Name</h2>
+					</div>
+					<div class="text-section" id="ChatOblock">
+					</div>
+				</div>
+				<div class="container-fluid input-block d-flex align-items-end justify-content-center">
+					<div class="input-group mb-3">
+						<input type="text" class="form-control" placeholder="Enter your message ..."
+							aria-label="message" aria-describedby="button-addon2" id="InpBlock">
+						<button class="btn btn-primary" type="button" id="button-addon2"
+							onclick="SendMsg()">Send</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 
 
-        const addrBar_array = String(window.location.href).split("/");
-        var receiverName = addrBar_array[addrBar_array.length - 2]
-        if (receiverName == "DashBoard") console.log("No user Selected")
-        else sendReceiverName(receiverName)
+	<!-- <textarea  cols="80" rows="30"></textarea> -->
+	<!-- <form action="{% url 'ChatDash:Logout' %}" method="post">
+		{% csrf_token %}
+		<button type="submit">Logout</button>
+	</form> -->
 
-    </script>
+
+
+	<script>
+
+		let WS;
+		const OutBlock = document.getElementById('ChatOblock')
+		const InpBlock = document.getElementById('InpBlock')
+		let ReceiverName = ""
+		const ReceiverNameDOM = document.getElementById("ReceiverName")
+		const navBar = document.getElementById('offcanvasExample')
+		let MinWidth = 760
+		const screenWidth = window.innerWidth
+		if (screenWidth < MinWidth) {
+			navBar.classList.add('offcanvas')
+		}
+
+		function SendMsg() {
+			if (WS && WS.readyState === WebSocket.OPEN) {
+				Sendable_dict = {
+					// For identification of Group
+					'Message': InpBlock.value,
+				}
+				console.log("Sent")
+				WS.send(JSON.stringify(Sendable_dict))
+				InpBlock.value = " "
+			}
+		}
+		function format_data(data, receiverName) {
+			for (const timestamp in data) {
+				if (data.hasOwnProperty(timestamp)) {
+					const entry = data[timestamp];
+					if (entry.sender == receiverName) {
+						RenderMessage(entry.message, entry.sender, timestamp, "left")
+						//						OutBlock.value = OutBlock.value + `${entry.sender}: ${entry.message}\n`;
+					}
+					else {
+						RenderMessage(entry.message, entry.sender, timestamp, "right")
+					}
+
+				}
+			}
+		}
+
+
+		function RenderMessage(text, sender, timestamp, direction) {
+			//const li = document.createElement("li")
+			//li.className = "clearfix"
+
+			const div = document.createElement('div')
+			div.className = `msg m-2 p-2 rounded-2 float-${direction}`
+
+			const pTime = document.createElement('p')
+			const pMsg = document.createElement('p')
+			pMsg.className = "fs-4"
+			pMsg.textContent = text
+			pTime.textContent = `${timestamp}`
+
+			div.appendChild(pTime)
+			div.appendChild(pMsg)
+
+			OutBlock.appendChild(div)
+			OutBlock.scrollTop = OutBlock.scrollHeight;
+		}
+
+		function get_chats(receiverName, render_all) {
+			fetch('get_chats/' + receiverName + "/" + render_all + "/")
+				.then(response => response.json())
+				.then(data => {
+					format_data(data, receiverName)
+				})
+				.catch(error => {
+					window.alert("Error Occured while Sending", error)
+				});
+
+		}
+		function sendReceiverName(receiverName) {
+			ReceiverNameDOM.textContent = receiverName
+			// if connection is already established then closes the connection 
+			if (WS) {
+				WS.close();
+				OutBlock.textContent = ""
+			}
+			// if not then goes accordingly
+			WS = new WebSocket("ws://127.0.0.1:8000/" + receiverName + "/")
+			WS.onopen = (e) => {
+				get_chats(receiverName, 1)
+			}
+			WS.onmessage = (e) => {
+				get_chats(receiverName, 0)
+			}
+
+		}
+
+
+		const addrBar_array = String(window.location.href).split("/");
+		var receiverName = addrBar_array[addrBar_array.length - 2]
+		if (receiverName == "DashBoard") console.log("No user Selected")
+		else sendReceiverName(receiverName)
+	</script>
+
 </body>
 
 </html>

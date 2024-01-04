@@ -8,6 +8,7 @@ channels = "*"
 django = "*"
 daphne = "*"
 channels-redis = "*"
+django-bootstrap-v5 = "*"
 
 [dev-packages]
 
