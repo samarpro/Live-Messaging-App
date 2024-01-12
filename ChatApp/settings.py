@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-4!dc$xgqxv#53f49%$jc&8nxo*63d+1wb9n=-v^tqfssocav6k
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['.vercel.app']
 
 # Configuring ASGI application
 

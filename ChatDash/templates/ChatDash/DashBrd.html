@@ -30,18 +30,17 @@
 				aria-labelledby="offcanvasExampleLabel">
 				<div class="user-div offcanvas-header">
 					<h1 class="offcanvas-title m-4" id="offcanvasExampleLabel">Greetings, {{user}}</h1>
-					<button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
 				</div>
-				<div class="contact-div offcanvas-body">
+				<div class="contact-div" >
 					{% for username in usernames %}
 					<ul class="list-group list-group-flush">
-						<a class="list-group-item fs-4 m-2" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample"
-						aria-controls="offcanvasExample" onclick="sendReceiverName('{{username.username}}')">
+						<a class="list-group-item fs-4 m-3" id="contact-div-element" onclick="sendReceiverName('{{username.username}}')">
 							<div class="image-div"></div>
 							{{username}}
 						</a>
 					</ul>
 					{% endfor %}
+					<a class="logout" href="../Logout">Logout</a>
 				</div>
 			</div>
 			<div class="message-list p-1 rounded-3">
@@ -63,16 +62,6 @@
 			</div>
 		</div>
 	</div>
-
-
-	<!-- <textarea  cols="80" rows="30"></textarea> -->
-	<!-- <form action="{% url 'ChatDash:Logout' %}" method="post">
-		{% csrf_token %}
-		<button type="submit">Logout</button>
-	</form> -->
-
-
-
 	<script>
 
 		let WS;
@@ -82,9 +71,15 @@
 		const ReceiverNameDOM = document.getElementById("ReceiverName")
 		const navBar = document.getElementById('offcanvasExample')
 		let MinWidth = 760
+		const contact_div_elements = document.querySelectorAll('#contact-div-element')
 		const screenWidth = window.innerWidth
 		if (screenWidth < MinWidth) {
 			navBar.classList.add('offcanvas')
+			contact_div_elements.forEach(ele=>{
+				ele.setAttribute('data-bs-toggle',"offcanvas")
+				ele.setAttribute('data-bs-target',"#offcanvasExample")
+				ele.setAttribute('aria-control',"offcanvasExample")
+			})
 		}
 
 		function SendMsg() {
@@ -122,7 +117,11 @@
 
 			const pTime = document.createElement('p')
 			const pMsg = document.createElement('p')
-			pMsg.className = "fs-4"
+			if (direction=="right") {
+				pMsg.className = `fs-4 text-end`
+				pTime.className='text-end'	
+			}
+			else pMsg.className = `fs-4 `
 			pMsg.textContent = text
 			pTime.textContent = `${timestamp}`
 
